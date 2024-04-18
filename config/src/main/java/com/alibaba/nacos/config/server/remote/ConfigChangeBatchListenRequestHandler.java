@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * config change listen request handler.
- *
+ * 配置变动批量处理类
  * @author liuzunfei
  * @version $Id: ConfigChangeListenRequestHandler.java, v 0.1 2020年07月14日 10:11 AM liuzunfei Exp $
  */

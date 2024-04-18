@@ -24,7 +24,7 @@ import java.util.Map;
 
 /**
  * Member node addressing mode.
- *
+ * 寻址工程
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public interface MemberLookup {

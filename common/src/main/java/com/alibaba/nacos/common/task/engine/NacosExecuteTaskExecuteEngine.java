@@ -26,11 +26,11 @@ import java.util.Collection;
 
 /**
  * Nacos execute task execute engine.
- *
+ * Nacos负责执行任务的执行引擎
  * @author xiweng.yy
  */
 public class NacosExecuteTaskExecuteEngine extends AbstractNacosTaskExecuteEngine<AbstractExecuteTask> {
-    
+    // 任务执行者
     private final TaskExecuteWorker[] executeWorkers;
     
     public NacosExecuteTaskExecuteEngine(String name, Logger logger) {
@@ -71,6 +71,7 @@ public class NacosExecuteTaskExecuteEngine extends AbstractNacosTaskExecuteEngin
     }
     
     private TaskExecuteWorker getWorker(Object tag) {
+        // 计算当前任务应该由哪个worker处理
         int idx = (tag.hashCode() & Integer.MAX_VALUE) % workersCount();
         return executeWorkers[idx];
     }

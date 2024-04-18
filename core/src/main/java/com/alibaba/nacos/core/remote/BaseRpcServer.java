@@ -86,6 +86,7 @@ public abstract class BaseRpcServer {
      * @return service port.
      */
     public int getServicePort() {
+        System.out.println("getServicePort:"+(EnvUtil.getPort() + rpcPortOffset()));
         return EnvUtil.getPort() + rpcPortOffset();
     }
     

@@ -18,6 +18,8 @@ package com.alibaba.nacos.core.remote.grpc;
 
 import com.alibaba.nacos.api.grpc.auto.Payload;
 import com.alibaba.nacos.common.remote.ConnectionType;
+import com.alibaba.nacos.common.remote.client.grpc.GrpcUtils;
+import com.alibaba.nacos.common.utils.LoggerUtils;
 import com.alibaba.nacos.common.utils.ReflectUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.core.remote.BaseRpcServer;
@@ -103,6 +105,7 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
                     Channel internalChannel = getInternalChannel(call);
                     ctx = ctx.withValue(CONTEXT_KEY_CHANNEL, internalChannel);
                 }
+                Loggers.REMOTE.info("拦截器接到请求:{}",call.getMethodDescriptor().getServiceName());
                 return Contexts.interceptCall(ctx, call, headers, next);
             }
         };
@@ -114,7 +117,7 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
                 .compressorRegistry(CompressorRegistry.getDefaultInstance())
                 .decompressorRegistry(DecompressorRegistry.getDefaultInstance())
                 .addTransportFilter(new ServerTransportFilter() {
-                    @Override
+                    @Override//每个连接创建一个connectionId
                     public Attributes transportReady(Attributes transportAttrs) {
                         InetSocketAddress remoteAddress = (InetSocketAddress) transportAttrs
                                 .get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
@@ -132,7 +135,7 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
                         return attrWrapper;
                         
                     }
-                    
+                    // 连接断开时从connectionManager移除连接。
                     @Override
                     public void transportTerminated(Attributes transportAttrs) {
                         String connectionId = null;
@@ -158,6 +161,11 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
         return Integer.parseInt(messageSize);
     }
     
+    /**
+     * 通过反射获取到了Netty Channel
+     * @param serverCall
+     * @return
+     */
     private Channel getInternalChannel(ServerCall serverCall) {
         ServerStream serverStream = (ServerStream) ReflectUtils.getFieldValue(serverCall, "stream");
         return (Channel) ReflectUtils.getFieldValue(serverStream, "channel");
@@ -165,21 +173,21 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
     
     private void addServices(MutableHandlerRegistry handlerRegistry, ServerInterceptor... serverInterceptor) {
         
-        // unary common call register.
+        // unary common call register. 定义Method
         final MethodDescriptor<Payload, Payload> unaryPayloadMethod = MethodDescriptor.<Payload, Payload>newBuilder()
                 .setType(MethodDescriptor.MethodType.UNARY)
                 .setFullMethodName(MethodDescriptor.generateFullMethodName(REQUEST_SERVICE_NAME, REQUEST_METHOD_NAME))
                 .setRequestMarshaller(ProtoUtils.marshaller(Payload.getDefaultInstance()))
                 .setResponseMarshaller(ProtoUtils.marshaller(Payload.getDefaultInstance())).build();
-        
+        //定义服务处理方法回调
         final ServerCallHandler<Payload, Payload> payloadHandler = ServerCalls
                 .asyncUnaryCall((request, responseObserver) -> grpcCommonRequestAcceptor.request(request, responseObserver));
-        
+        //定义Servie
         final ServerServiceDefinition serviceDefOfUnaryPayload = ServerServiceDefinition.builder(REQUEST_SERVICE_NAME)
                 .addMethod(unaryPayloadMethod, payloadHandler).build();
         handlerRegistry.addService(ServerInterceptors.intercept(serviceDefOfUnaryPayload, serverInterceptor));
         
-        // bi stream register.
+        // bi stream register. 双向流
         final ServerCallHandler<Payload, Payload> biStreamHandler = ServerCalls.asyncBidiStreamingCall(
                 (responseObserver) -> grpcBiStreamRequestAcceptor.requestBiStream(responseObserver));
         

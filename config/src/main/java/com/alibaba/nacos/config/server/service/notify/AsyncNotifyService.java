@@ -205,7 +205,7 @@ public class AsyncNotifyService {
                 syncRequest.setTag(task.tag);
                 syncRequest.setTenant(task.getTenant());
                 Member member = task.member;
-                if (memberManager.getSelf().equals(member)) {
+                if (memberManager.getSelf().equals(member)) {//如果是本机
                     if (syncRequest.isBeta()) {
                         dumpService.dump(syncRequest.getDataId(), syncRequest.getGroup(), syncRequest.getTenant(),
                                 syncRequest.getLastModified(), NetUtils.localIP(), true);
@@ -218,13 +218,14 @@ public class AsyncNotifyService {
                 
                 if (memberManager.hasMember(member.getAddress())) {
                     // start the health check and there are ips that are not monitored, put them directly in the notification queue, otherwise notify
+                    // 启动运行状况检查，如果存在未受监控的IP，请将其直接放入通知队列，否则通知
                     boolean unHealthNeedDelay = memberManager.isUnHealth(member.getAddress());
                     if (unHealthNeedDelay) {
-                        // target ip is unhealthy, then put it in the notification list
+                        // target ip is unhealthy, then put it in the notification list 目标ip不健康，请将其放入通知列表
                         ConfigTraceService.logNotifyEvent(task.getDataId(), task.getGroup(), task.getTenant(), null,
                                 task.getLastModified(), InetUtils.getSelfIP(), ConfigTraceService.NOTIFY_EVENT_UNHEALTH,
                                 0, member.getAddress());
-                        // get delay time and set fail count to the task
+                        // get delay time and set fail count to the task 获取延迟时间并将失败计数设置为任务
                         asyncTaskExecute(task);
                     } else {
     
@@ -234,7 +235,7 @@ public class AsyncNotifyService {
                                             task.getLastModified(), member.getAddress(), task.isBeta));
                         } else {
                             try {
-                                configClusterRpcClientProxy
+                                configClusterRpcClientProxy //通知集群
                                         .syncConfigChange(member, syncRequest, new AsyncRpcNotifyCallBack(task));
                             } catch (Exception e) {
                                 MetricsMonitor.getConfigNotifyException().increment();

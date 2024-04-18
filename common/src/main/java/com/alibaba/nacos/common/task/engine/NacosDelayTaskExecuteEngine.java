@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -150,6 +151,7 @@ public class NacosDelayTaskExecuteEngine extends AbstractNacosTaskExecuteEngine<
                 continue;
             }
             try {
+                System.out.println("processorName"+processor.getClass().getName());
                 // ReAdd task if process failed
                 if (!processor.process(task)) {
                     retryFailedTask(taskKey, task);

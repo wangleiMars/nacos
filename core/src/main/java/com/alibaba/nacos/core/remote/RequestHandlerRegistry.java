@@ -55,7 +55,7 @@ public class RequestHandlerRegistry implements ApplicationListener<ContextRefres
     
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        Map<String, RequestHandler> beansOfType = event.getApplicationContext().getBeansOfType(RequestHandler.class);
+        Map<String, RequestHandler> beansOfType = event.getApplicationContext().getBeansOfType(RequestHandler.class);//加载所有RequestHandler
         Collection<RequestHandler> values = beansOfType.values();
         for (RequestHandler requestHandler : values) {
             
@@ -78,10 +78,14 @@ public class RequestHandlerRegistry implements ApplicationListener<ContextRefres
                     TpsControl tpsControl = method.getAnnotation(TpsControl.class);
                     String pointName = tpsControl.pointName();
                     ControlManagerCenter.getInstance().getTpsControlManager().registerTpsPoint(pointName);
+//                    TpsMonitorPoint tpsMonitorPoint = new TpsMonitorPoint(pointName);
+//                    tpsMonitorManager.registerTpsControlPoint(tpsMonitorPoint);//需要做tps计数的注册
                 }
             } catch (Exception e) {
                 //ignore.
             }
+            // getGenericSuperclass 获取带有泛型的父类
+            //getActualTypeArguments 获取泛型的类型
             Class tClass = (Class) ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[0];
             registryHandlers.putIfAbsent(tClass.getSimpleName(), requestHandler);
         }

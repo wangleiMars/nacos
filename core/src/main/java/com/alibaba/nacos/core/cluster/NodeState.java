@@ -37,7 +37,7 @@ public enum NodeState {
     UP,
     
     /**
-     * Node may Crash.
+     * Node may Crash. 崩溃
      */
     SUSPICIOUS,
     
@@ -47,7 +47,7 @@ public enum NodeState {
     DOWN,
     
     /**
-     * The Node is isolated.
+     * The Node is isolated. 偏远的节点
      */
     ISOLATION,
     

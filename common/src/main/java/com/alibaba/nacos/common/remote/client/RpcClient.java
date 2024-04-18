@@ -33,6 +33,7 @@ import com.alibaba.nacos.common.lifecycle.Closeable;
 import com.alibaba.nacos.common.remote.ConnectionType;
 import com.alibaba.nacos.common.remote.PayloadRegistry;
 import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.common.utils.InternetAddressUtil;
 import com.alibaba.nacos.common.utils.LoggerUtils;
 import com.alibaba.nacos.common.utils.NumberUtils;
@@ -68,7 +69,9 @@ public abstract class RpcClient implements Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger("com.alibaba.nacos.common.remote.client");
     
     private ServerListFactory serverListFactory;
-    
+    /**
+     * 事件连接队列
+     */
     protected BlockingQueue<ConnectionEvent> eventLinkedBlockingQueue = new LinkedBlockingQueue<>();
     
     protected volatile AtomicReference<RpcClientStatus> rpcClientStatus = new AtomicReference<>(
@@ -262,6 +265,8 @@ public abstract class RpcClient implements Closeable {
                 ConnectionEvent take;
                 try {
                     take = eventLinkedBlockingQueue.take();
+                    LoggerUtils.printIfInfoEnabled(LOGGER, "ConnectionEvent监听，获取到一条:{}",
+                            take.isConnected() ? "连接成功通知" : "断开通知");
                     if (take.isConnected()) {
                         notifyConnected();
                     } else if (take.isDisConnected()) {
@@ -281,6 +286,7 @@ public abstract class RpcClient implements Closeable {
                     }
                     ReconnectContext reconnectContext = reconnectionSignal
                             .poll(rpcClientConfig.connectionKeepAlive(), TimeUnit.MILLISECONDS);
+                    LoggerUtils.printIfInfoEnabled(LOGGER, "nacos请求服务端是否发送心跳:{}" , reconnectContext==null);
                     if (reconnectContext == null) {
                         // check alive time.
                         if (System.currentTimeMillis() - lastActiveTimeStamp >= rpcClientConfig.connectionKeepAlive()) {
@@ -355,7 +361,7 @@ public abstract class RpcClient implements Closeable {
                 
                 LoggerUtils.printIfInfoEnabled(LOGGER, "[{}] Try to connect to server on start up, server: {}",
                         rpcClientConfig.name(), serverInfo);
-                
+                //创建连接rpc
                 connectToServer = connectToServer(serverInfo);
             } catch (Throwable e) {
                 LoggerUtils.printIfWarnEnabled(LOGGER,
@@ -374,12 +380,12 @@ public abstract class RpcClient implements Closeable {
             rpcClientStatus.set(RpcClientStatus.RUNNING);
             eventLinkedBlockingQueue.offer(new ConnectionEvent(ConnectionEvent.CONNECTED));
         } else {
-            switchServerAsync();
+            switchServerAsync();//转为异步连接
         }
-        
+        //服务重连
         registerServerRequestHandler(new ConnectResetRequestHandler());
         
-        // register client detection request.
+        // register client detection request.  检测请求
         registerServerRequestHandler(request -> {
             if (request instanceof ClientDetectionRequest) {
                 return new ClientDetectionResponse();
@@ -389,14 +395,16 @@ public abstract class RpcClient implements Closeable {
         });
         
     }
-    
+    /**
+     * 连接重置请求处理器
+     */
     class ConnectResetRequestHandler implements ServerRequestHandler {
         
         @Override
         public Response requestReply(Request request) {
             
             if (request instanceof ConnectResetRequest) {
-                
+                LoggerUtils.printIfInfoEnabled(LOGGER, "连接重置请求处理器:{}", request);
                 try {
                     synchronized (RpcClient.this) {
                         if (isRunning()) {
@@ -626,6 +634,8 @@ public abstract class RpcClient implements Closeable {
      * @return response from server.
      */
     public Response request(Request request, long timeoutMills) throws NacosException {
+        System.out.println("rpc发送请求："+ JacksonUtils.toJson(request));
+        System.out.println("rpc发送请求："+ JacksonUtils.toJson(request));
         int retryTimes = 0;
         Response response;
         Throwable exceptionThrow = null;

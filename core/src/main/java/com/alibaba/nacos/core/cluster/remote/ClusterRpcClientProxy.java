@@ -49,7 +49,7 @@ import static com.alibaba.nacos.api.exception.NacosException.CLIENT_INVALID_PARA
 
 /**
  * cluster rpc client proxy.
- *
+ * 集群节点变更时间感知
  * @author liuzunfei
  * @version $Id: ClusterRpcClientProxy.java, v 0.1 2020年08月11日 2:11 PM liuzunfei Exp $
  */
@@ -81,7 +81,7 @@ public class ClusterRpcClientProxy extends MemberChangeListener {
     
     /**
      * init cluster rpc clients.
-     *
+     * 初始化rpc客户端
      * @param members cluster server list member list.
      */
     private void refresh(List<Member> members) throws NacosException {
@@ -90,11 +90,11 @@ public class ClusterRpcClientProxy extends MemberChangeListener {
         for (Member member : members) {
             
             if (MemberUtil.isSupportedLongCon(member)) {
-                createRpcClientAndStart(member, ConnectionType.GRPC);
+                createRpcClientAndStart(member, ConnectionType.GRPC);//创建grpc客户端
             }
         }
         
-        //shutdown and remove old members.
+        //shutdown and remove old members. 停止旧节点rpc客户端
         Set<Map.Entry<String, RpcClient>> allClientEntrys = RpcClientFactory.getAllClientEntries();
         Iterator<Map.Entry<String, RpcClient>> iterator = allClientEntrys.iterator();
         List<String> newMemberKeys = members.stream().filter(MemberUtil::isSupportedLongCon)

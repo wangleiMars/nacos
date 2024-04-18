@@ -62,6 +62,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
+ * 集群节点管理器
  * Cluster node management in Nacos.
  *
  * <p>{@link ServerMemberManager#init()} Cluster node manager initialization {@link ServerMemberManager#shutdown()} The
@@ -100,12 +101,12 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     private static final long DEFAULT_TASK_DELAY_TIME = 5_000L;
     
     /**
-     * Cluster node list.
+     * Cluster node list. 集群节点
      */
     private volatile ConcurrentSkipListMap<String, Member> serverList;
     
     /**
-     * Is this node in the cluster list.
+     * Is this node in the cluster list. 当前节点是否在集群配置中
      */
     private static volatile boolean isInIpList = true;
     
@@ -130,18 +131,18 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     private volatile Member self;
     
     /**
-     * here is always the node information of the "UP" state.
+     * here is always the node information of the "UP" state. 状态正常的节点信息
      */
     private volatile Set<String> memberAddressInfos = new ConcurrentHashSet<>();
     
     /**
-     * Broadcast this node element information task.
+     * Broadcast this node element information task. 广播此节点元素信息任务。
      */
     private final MemberInfoReportTask infoReportTask = new MemberInfoReportTask();
     
     public ServerMemberManager(ServletContext servletContext) throws Exception {
         this.serverList = new ConcurrentSkipListMap<>();
-        EnvUtil.setContextPath(servletContext.getContextPath());
+        EnvUtil.setContextPath(servletContext.getContextPath());//初始化上下文
         init();
     }
     
@@ -149,18 +150,18 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         Loggers.CORE.info("Nacos-related cluster resource initialization");
         this.port = EnvUtil.getProperty(SERVER_PORT_PROPERTY, Integer.class, DEFAULT_SERVER_PORT);
         this.localAddress = InetUtils.getSelfIP() + ":" + port;
-        this.self = MemberUtil.singleParse(this.localAddress);
-        this.self.setExtendVal(MemberMetaDataConstants.VERSION, VersionUtils.version);
+        this.self = MemberUtil.singleParse(this.localAddress);//创建自己节点Member
+        this.self.setExtendVal(MemberMetaDataConstants.VERSION, VersionUtils.version);//设置nacos版本
         
         // init abilities.
         this.self.setAbilities(initMemberAbilities());
         
         serverList.put(self.getAddress(), self);
         
-        // register NodeChangeEvent publisher to NotifyManager
+        // register NodeChangeEvent publisher to NotifyManager 节点变更事件注册
         registerClusterEvent();
         
-        // Initializes the lookup mode
+        // Initializes the lookup mode 创建集群查找器 ，配置文件 or 服务地址
         initAndStartLookup();
         
         if (serverList.isEmpty()) {
@@ -178,14 +179,35 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         return serverAbilities;
     }
     
+    /**
+     * 创建集群查找器 ，配置文件 or 服务地址
+     */
+    private void initAndStartLookup() throws NacosException {
+        this.lookup = LookupFactory.createLookUp(this);
+        isUseAddressServer = this.lookup.useAddressServer();
+        this.lookup.start();
+    }
+    
+    /**
+     * switch look up.
+     *
+     * @param name look up name.
+     * @throws NacosException exception.
+     */
+    public void switchLookup(String name) throws NacosException {
+        this.lookup = LookupFactory.switchLookup(name, this);
+        isUseAddressServer = this.lookup.useAddressServer();
+        this.lookup.start();
+    }
+    
     private void registerClusterEvent() {
-        // Register node change events
+        // Register node change events 注册集群变动事件
         NotifyCenter.registerToPublisher(MembersChangeEvent.class,
                 EnvUtil.getProperty(MEMBER_CHANGE_EVENT_QUEUE_SIZE_PROPERTY, Integer.class,
                         DEFAULT_MEMBER_CHANGE_EVENT_QUEUE_SIZE));
         
         // The address information of this node needs to be dynamically modified
-        // when registering the IP change of this node
+        // when registering the IP change of this node 注册ip变动消费者
         NotifyCenter.registerSubscriber(new Subscriber<InetUtils.IPChangeEvent>() {
             @Override
             public void onEvent(InetUtils.IPChangeEvent event) {
@@ -271,7 +293,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     
     /**
      * Whether the node exists within the cluster.
-     *
+     * 节点是否存在于集群内。
      * @param address ip:port
      * @return is exists
      */
@@ -317,7 +339,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     
     /**
      * return this cluster all members.
-     *
+     * 所有成员信息对象
      * @return {@link Collection} all member
      */
     public Collection<Member> allMembers() {
@@ -329,7 +351,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     
     /**
      * return this cluster all members without self.
-     *
+     * 获取所有节点信息包含自身
      * @return {@link Collection} all member without self
      */
     public List<Member> allMembersWithoutSelf() {
@@ -338,6 +360,11 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         return members;
     }
     
+    /**
+     * 集群信息变更
+     * @param members
+     * @return
+     */
     synchronized boolean memberChange(Collection<Member> members) {
         
         if (members == null || members.isEmpty()) {
@@ -390,9 +417,9 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         // that the event publication is sequential
         if (hasChange) {
             Loggers.CLUSTER.warn("[serverlist] updated to : {}", finalMembers);
-            MemberUtil.syncToFile(finalMembers);
+            MemberUtil.syncToFile(finalMembers);//将集群变更写入到 cluster.conf
             Event event = MembersChangeEvent.builder().members(finalMembers).build();
-            NotifyCenter.publishEvent(event);
+            NotifyCenter.publishEvent(event);//发送集群变更事件
         } else {
             if (Loggers.CLUSTER.isDebugEnabled()) {
                 Loggers.CLUSTER.debug("[serverlist] not updated, is still : {}", finalMembers);
@@ -416,7 +443,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     
     /**
      * members leave this cluster.
-     *
+     * 节点下线
      * @param members {@link Collection} wait leave members
      * @return is success
      */
@@ -428,7 +455,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     
     /**
      * this member {@link Member#getState()} is health.
-     *
+     * 查询节点是否健康
      * @param address ip:port
      * @return is health
      */
@@ -452,8 +479,8 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
             // fix#issue https://github.com/alibaba/nacos/issues/7230
             return;
         }
-        getSelf().setState(NodeState.UP);
-        if (!EnvUtil.getStandaloneMode()) {
+        getSelf().setState(NodeState.UP);//设置自己节点状态为启用
+        if (!EnvUtil.getStandaloneMode()) {// 如果不是单机启动 广播此节点元素信息任务。
             GlobalExecutor.scheduleByCommon(this.infoReportTask, DEFAULT_TASK_DELAY_TIME);
         }
         EnvUtil.setPort(event.getWebServer().getPort());
@@ -473,7 +500,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         infoReportTask.shutdown();
         LookupFactory.destroy();
     }
-    
+    //健康成员节点的地址信息
     public Set<String> getMemberAddressInfos() {
         return memberAddressInfos;
     }
@@ -493,6 +520,10 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         return infoReportTask;
     }
     
+    /**
+     *
+     * @return 获取集群节点
+     */
     public Map<String, Member> getServerList() {
         return Collections.unmodifiableMap(serverList);
     }
@@ -535,8 +566,40 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
                         .post(url, header, Query.EMPTY, getSelf(), reference.getType(), new Callback<String>() {
                             @Override
                             public void onReceive(RestResult<String> result) {
+                                if (result.getCode() == HttpStatus.NOT_IMPLEMENTED.value()// 如果是501或者404
+                                        || result.getCode() == HttpStatus.NOT_FOUND.value()) {
+                                    Loggers.CLUSTER
+                                            .warn("{} version is too low, it is recommended to upgrade the version : {}",
+                                                    target, VersionUtils.version);
+                                    Member memberNew = null;
+                                    if (target.getExtendVal(MemberMetaDataConstants.VERSION) != null) {
+                                        memberNew = target.copy();
+                                        // Clean up remote version info.
+                                        // This value may still stay in extend info when remote server has been downgraded to old version.
+                                        memberNew.delExtendVal(MemberMetaDataConstants.VERSION);
+                                        memberNew.delExtendVal(MemberMetaDataConstants.READY_TO_UPGRADE);
+                                        Loggers.CLUSTER.warn("{} : Clean up version info,"
+                                                + " target has been downgrade to old version.", memberNew); //清除支持远程连接标志，目标可能回滚版本
+                                    }
+                                    if (target.getAbilities() != null
+                                            && target.getAbilities().getRemoteAbility() != null && target.getAbilities()
+                                            .getRemoteAbility().isSupportRemoteConnection()) {
+                                        if (memberNew == null) {
+                                            memberNew = target.copy();
+                                        }
+                                        memberNew.getAbilities().getRemoteAbility().setSupportRemoteConnection(false);
+                                        Loggers.CLUSTER
+                                                .warn("{} : Clear support remote connection flag,target may rollback version ",
+                                                        memberNew);
+                                    }
+                                    if (memberNew != null) {
+                                        update(memberNew);//更新节点信息
+                                    }
+                                    return;
+                                }
                                 if (result.ok()) {
                                     handleReportResult(result.getData(), target);
+                                    MemberUtil.onSuccess(ServerMemberManager.this, target);//成功，如果节点状态有变更发送节点变更事件 MembersChangeEvent
                                 } else {
                                     Loggers.CLUSTER.warn("failed to report new info to target node : {}, result : {}",
                                             target.getAddress(), result);

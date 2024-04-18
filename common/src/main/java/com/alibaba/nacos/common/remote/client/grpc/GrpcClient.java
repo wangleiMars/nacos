@@ -161,9 +161,9 @@ public abstract class GrpcClient extends RpcClient {
      */
     private ManagedChannel createNewManagedChannel(String serverIp, int serverPort) {
         ManagedChannelBuilder<?> managedChannelBuilder = ManagedChannelBuilder.forAddress(serverIp, serverPort)
-                .executor(grpcExecutor).compressorRegistry(CompressorRegistry.getDefaultInstance())
-                .decompressorRegistry(DecompressorRegistry.getDefaultInstance())
-                .maxInboundMessageSize(clientConfig.maxInboundMessageSize())
+                .executor(grpcExecutor).compressorRegistry(CompressorRegistry.getDefaultInstance())//压缩
+                .decompressorRegistry(DecompressorRegistry.getDefaultInstance())//解压
+                .maxInboundMessageSize(clientConfig.maxInboundMessageSize())//消息大小
                 .keepAliveTime(clientConfig.channelKeepAlive(), TimeUnit.MILLISECONDS).usePlaintext();
         return managedChannelBuilder.build();
     }
@@ -192,6 +192,7 @@ public abstract class GrpcClient extends RpcClient {
             }
             ServerCheckRequest serverCheckRequest = new ServerCheckRequest();
             Payload grpcRequest = GrpcUtils.convert(serverCheckRequest);
+            LOGGER.info("serverCheck请求");
             ListenableFuture<Payload> responseFuture = requestBlockingStub.request(grpcRequest);
             Payload response = responseFuture.get(clientConfig.serverCheckTimeOut(), TimeUnit.MILLISECONDS);
             //receive connection unregister response here,not check response is success.
@@ -328,6 +329,7 @@ public abstract class GrpcClient extends RpcClient {
                 conSetupRequest.setLabels(super.getLabels());
                 conSetupRequest.setAbilities(super.clientAbilities);
                 conSetupRequest.setTenant(super.getTenant());
+                LoggerUtils.printIfInfoEnabled(LOGGER,"发送一次服务ip注册请求:{}",conSetupRequest);
                 grpcConn.sendRequest(conSetupRequest);
                 //wait to register connection setup
                 Thread.sleep(100L);

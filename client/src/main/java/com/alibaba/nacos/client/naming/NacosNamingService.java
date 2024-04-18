@@ -95,7 +95,7 @@ public class NacosNamingService implements NamingService {
         initLogName(nacosClientProperties);
     
         this.notifierEventScope = UUID.randomUUID().toString();
-        this.changeNotifier = new InstancesChangeNotifier(this.notifierEventScope);
+        this.changeNotifier = new InstancesChangeNotifier(this.notifierEventScope);//注册事件-实例变化通知
         NotifyCenter.registerToPublisher(InstancesChangeEvent.class, 16384);
         NotifyCenter.registerSubscriber(changeNotifier);
         this.serviceInfoHolder = new ServiceInfoHolder(namespace, this.notifierEventScope, nacosClientProperties);
@@ -410,7 +410,7 @@ public class NacosNamingService implements NamingService {
             return;
         }
         String clusterString = StringUtils.join(clusters, ",");
-        changeNotifier.registerListener(groupName, serviceName, clusterString, listener);
+        changeNotifier.registerListener(groupName, serviceName, clusterString, listener);//本地注册监听器
         clientProxy.subscribe(serviceName, groupName, clusterString);
     }
     

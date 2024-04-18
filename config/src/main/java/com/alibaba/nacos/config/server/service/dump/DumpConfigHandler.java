@@ -34,7 +34,7 @@ import com.alibaba.nacos.config.server.service.trace.ConfigTraceService;
 public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
     
     /**
-     * trigger config dump event.
+     * trigger config dump event. 触发配置转储事件。
      *
      * @param event {@link ConfigDumpEvent}
      * @return {@code true} if the config dump task success , else {@code false}

@@ -63,6 +63,9 @@ public class ServiceInfo {
     
     private volatile boolean allIPs = false;
     
+    /**
+     * 达到保护阈值
+     */
     private volatile boolean reachProtectionThreshold = false;
     
     public ServiceInfo() {

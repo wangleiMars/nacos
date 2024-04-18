@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * ConfigConnectionEventListener.
- *
+ * 注册中心事件监听
  * @author liuzunfei
  * @version $Id: ConfigConnectionEventListener.java, v 0.1 2020年07月20日 2:27 PM liuzunfei Exp $
  */

@@ -28,7 +28,8 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * server push ack synchronier.
- *
+ * 服务端推送ack管理器
+ * 回调管理器
  * @author liuzunfei
  * @version $Id: RpcAckCallbackSynchronizer.java, v 0.1 2020年07月29日 7:56 PM liuzunfei Exp $
  */

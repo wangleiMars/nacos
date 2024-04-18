@@ -26,6 +26,7 @@ import com.alibaba.nacos.api.remote.response.ErrorResponse;
 import com.alibaba.nacos.api.remote.response.Response;
 import com.alibaba.nacos.api.remote.response.ServerCheckResponse;
 import com.alibaba.nacos.common.remote.client.grpc.GrpcUtils;
+import com.alibaba.nacos.common.utils.LoggerUtils;
 import com.alibaba.nacos.core.remote.Connection;
 import com.alibaba.nacos.core.remote.ConnectionManager;
 import com.alibaba.nacos.core.remote.RequestHandler;
@@ -74,7 +75,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
         
         traceIfNecessary(grpcRequest, true);
         String type = grpcRequest.getMetadata().getType();
-        
+        Loggers.REMOTE.info("接收到请求type:{}",type);
         //server is on starting.
         if (!ApplicationUtils.isStarted()) {
             Payload payloadResponse = GrpcUtils.convert(
@@ -88,6 +89,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
         
         // server check.
         if (ServerCheckRequest.class.getSimpleName().equals(type)) {
+            Loggers.REMOTE.info("接收到ServerCheckRequest");
             Payload serverCheckResponseP = GrpcUtils.convert(new ServerCheckResponse(CONTEXT_KEY_CONN_ID.get()));
             traceIfNecessary(serverCheckResponseP, false);
             responseObserver.onNext(serverCheckResponseP);
@@ -95,7 +97,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
             return;
         }
         
-        RequestHandler requestHandler = requestHandlerRegistry.getByRequestType(type);
+        RequestHandler requestHandler = requestHandlerRegistry.getByRequestType(type);//获取处理类
         //no handler found.
         if (requestHandler == null) {
             Loggers.REMOTE_DIGEST.warn(String.format("[%s] No handler for request type : %s :", "grpc", type));
@@ -107,7 +109,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
             return;
         }
         
-        //check connection status.
+        //check connection status. 检查连接状态
         String connectionId = CONTEXT_KEY_CONN_ID.get();
         boolean requestValid = connectionManager.checkValid(connectionId);
         if (!requestValid) {

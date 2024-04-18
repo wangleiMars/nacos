@@ -81,7 +81,7 @@ public class EmbeddedStorageContextUtils {
     
     /**
      * In the case of the in-cluster storage mode, the logic of horizontal notification is implemented asynchronously
-     * via the raft state machine, along with the information.
+     * via the raft state machine, along with the information. 在集群存储模式中，水平通知的逻辑是异步实现的经由raft状态机以及信息。
      *
      * @param configInfo {@link ConfigInfo}
      * @param srcIp      The IP of the operator

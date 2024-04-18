@@ -17,6 +17,7 @@
 package com.alibaba.nacos.core.cluster.lookup;
 
 import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.core.cluster.AbstractMemberLookup;
 import com.alibaba.nacos.core.cluster.Member;
 import com.alibaba.nacos.core.cluster.MemberUtil;
@@ -33,7 +34,7 @@ import java.util.List;
 
 /**
  * Cluster.conf file managed cluster member node addressing pattern.
- *
+ * 文件寻址模式是 Nacos 集群模式下的默认寻址实现。文件寻址模式很简单，其实就是每个Nacos节点需要维护⼀个叫做 cluster.conf的文件
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public class FileConfigMemberLookup extends AbstractMemberLookup {
@@ -79,6 +80,7 @@ public class FileConfigMemberLookup extends AbstractMemberLookup {
         Collection<Member> tmpMembers = new ArrayList<>();
         try {
             List<String> tmp = EnvUtil.readClusterConf();
+            System.out.println("readClusterConfFromDisk:"+ JacksonUtils.toJson(tmp));
             tmpMembers = MemberUtil.readServerConf(tmp);
         } catch (Throwable e) {
             Loggers.CLUSTER

@@ -30,7 +30,9 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 @Service
 public class GrpcClusterServer extends BaseGrpcServer {
-    
+    public GrpcClusterServer() {
+        System.out.println("初始化GrpcClusterServer");
+    }
     @Override
     public int rpcPortOffset() {
         return Constants.CLUSTER_GRPC_PORT_DEFAULT_OFFSET;

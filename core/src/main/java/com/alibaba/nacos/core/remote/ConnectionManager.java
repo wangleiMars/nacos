@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * connect manager.
- *
+ * 连接管理器
  * @author liuzunfei
  * @version $Id: ConnectionManager.java, v 0.1 2020年07月13日 7:07 PM liuzunfei Exp $
  */
@@ -55,6 +55,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ConnectionManager {
     
     private static final Logger LOGGER = com.alibaba.nacos.plugin.control.Loggers.CONNECTION;
+    /**
+     * 当前装载机调整计数，仅有效一次，用于重新平衡。
+     * current loader adjust count,only effective once,use to re balance.
+     */
+    private int loadClient = -1;
+    
+    String redirectAddress = null;
     
     private Map<String, AtomicInteger> connectionForClientIp = new ConcurrentHashMap<>(16);
     
@@ -69,7 +76,7 @@ public class ConnectionManager {
     }
     
     /**
-     * if monitor detail.
+     * if monitor detail. 监控详情
      *
      * @param clientIp clientIp.
      * @return
@@ -79,6 +86,18 @@ public class ConnectionManager {
                 .getConnectionLimitRule();
         return connectionControlRule != null && connectionControlRule.getMonitorIpList() != null
                 && connectionControlRule.getMonitorIpList().contains(clientIp);
+//        return connectionLimitRule != null && connectionLimitRule.getMonitorIpList() != null && connectionLimitRule
+//                .getMonitorIpList().contains(clientIp);
+    }
+    
+    @PostConstruct
+    protected void initLimitRue() {
+        try {
+            loadRuleFromLocal();//加载本地限额规则
+            registerFileWatch();
+        } catch (Exception e) {
+            Loggers.REMOTE.warn("Fail to init limit rue from local ,error= ", e);
+        }
     }
     
     /**

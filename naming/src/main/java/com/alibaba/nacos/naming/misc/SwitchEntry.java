@@ -51,8 +51,13 @@ public class SwitchEntry {
     
     public static final String PUSH_ENABLED = "pushEnabled";
     
+    /**
+     * 服务同步时间时间
+     */
     public static final String SERVICE_STATUS_SYNC_PERIOD = "serviceStatusSynchronizationPeriodMillis";
-    
+    /**
+     * 服务端同步时间时间
+     */
     public static final String SERVER_STATUS_SYNC_PERIOD = "serverStatusSynchronizationPeriodMillis";
     
     public static final String HEALTH_CHECK_TIMES = "healthCheckTimes";
@@ -95,6 +100,9 @@ public class SwitchEntry {
     
     public static final String DISTRO_SERVER_EXPIRED_MILLIS = "distroServerExpiredMillis";
     
+    /**
+     * 心跳开关
+     */
     public static final String LIGHT_BEAT_ENABLED = "lightBeatEnabled";
     
     public static final String AUTO_CHANGE_HEALTH_CHECK_ENABLED = "autoChangeHealthCheckEnabled";

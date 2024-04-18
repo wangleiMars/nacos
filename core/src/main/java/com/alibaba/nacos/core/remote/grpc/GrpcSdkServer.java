@@ -31,6 +31,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Service
 public class GrpcSdkServer extends BaseGrpcServer {
     
+    public GrpcSdkServer() {
+        System.out.println("初始化GrpcSdkServer");
+    }
+   
     @Override
     public int rpcPortOffset() {
         return Constants.SDK_GRPC_PORT_DEFAULT_OFFSET;

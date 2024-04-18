@@ -67,7 +67,9 @@ public class Instance implements Serializable {
     private boolean enabled = true;
     
     /**
-     * If instance is ephemeral.
+     * If instance is ephemeral. 实例是否为临时实例，是获取的是grpcclient，否http服务， 表示注册的实例是临时实例还是持久化实例。如果是临时实例，则不会在Nacos服务端持久化存储，
+     * 需要通过上报心跳的方式进行保活，如果一段时间内没有上报心跳，则会被Nacos服务端摘除。 在被摘除后如果又开始上报心跳，则会重新将这个实例注册。持久化实例则会持久化到Nacos服务端，
+     * 此时即使注册实例的客户端进程不在，这个实例也不会从服务端删除，只会将健康状态设为不健康。
      *
      * @since 1.0.0
      */

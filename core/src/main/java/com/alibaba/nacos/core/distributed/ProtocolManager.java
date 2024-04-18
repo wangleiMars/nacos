@@ -121,9 +121,10 @@ public class ProtocolManager extends MemberChangeListener implements DisposableB
     }
     
     private void initCPProtocol() {
+        //CPProtocol 初始化 JRaftProtocol
         ApplicationUtils.getBeanIfExist(CPProtocol.class, protocol -> {
-            Class configType = ClassUtils.resolveGenericType(protocol.getClass());
-            Config config = (Config) ApplicationUtils.getBean(configType);
+            Class configType = ClassUtils.resolveGenericType(protocol.getClass());//获取泛型
+            Config config = (Config) ApplicationUtils.getBean(configType);//获取配置实例
             injectMembers4CP(config);
             protocol.init(config);
             ProtocolManager.this.cpProtocol = protocol;
@@ -146,14 +147,14 @@ public class ProtocolManager extends MemberChangeListener implements DisposableB
     
     @Override
     public void onEvent(MembersChangeEvent event) {
-        // Here, the sequence of node change events is very important. For example,
-        // node change event A occurs at time T1, and node change event B occurs at
+        // Here, the sequence of node change events is very important. For example, 在这里，节点更改事件的顺序非常重要。例如
+        // node change event A occurs at time T1, and node change event B occurs at 节点更改事件A发生在时间T1，节点更改事件B发生在一段时间后的时间T2。
         // time T2 after a period of time.
         // (T1 < T2)
-        // Node change events between different protocols should not block each other.
-        // and we use a single thread pool to inform the consistency layer of node changes,
-        // to avoid multiple tasks simultaneously carrying out the consistency layer of
-        // node changes operation
+        // Node change events between different protocols should not block each other. 不同协议之间的节点更改事件不应相互阻塞。
+        // and we use a single thread pool to inform the consistency layer of node changes, 我们使用单线程池通知一致性层节点的变化，
+        // to avoid multiple tasks simultaneously carrying out the consistency layer of 避免同时执行多个任务的一致性层
+        // node changes operation 节点更改操作
         if (Objects.nonNull(apProtocol)) {
             ProtocolExecutor.apMemberChange(() -> apProtocol.memberChange(toAPMembersInfo(event.getMembers())));
         }

@@ -39,7 +39,7 @@ public class ServiceMetadata implements Serializable {
     private boolean ephemeral = true;
     
     /**
-     * protect threshold.
+     * protect threshold. 保护阈值
      */
     private float protectThreshold = 0.0F;
     

@@ -43,7 +43,7 @@ public final class LookupFactory {
     
     /**
      * Create the target addressing pattern.
-     *
+     * 创建节点查找期
      * @param memberManager {@link ServerMemberManager}
      * @return {@link MemberLookup}
      * @throws NacosException NacosException

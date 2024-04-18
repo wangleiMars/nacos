@@ -99,7 +99,7 @@ public class MemberUtil {
     
     /**
      * check whether the member support long connection or not.
-     *
+     * 检查构件是否支持长连接。
      * @param member member instance of server.
      * @return support long connection or not.
      */

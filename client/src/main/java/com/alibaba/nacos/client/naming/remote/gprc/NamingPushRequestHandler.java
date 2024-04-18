@@ -21,7 +21,9 @@ import com.alibaba.nacos.api.naming.remote.response.NotifySubscriberResponse;
 import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.api.remote.response.Response;
 import com.alibaba.nacos.client.naming.cache.ServiceInfoHolder;
+import com.alibaba.nacos.client.utils.LogUtils;
 import com.alibaba.nacos.common.remote.client.ServerRequestHandler;
+import com.alibaba.nacos.common.utils.LoggerUtils;
 
 /**
  * Naming push request handler.
@@ -36,11 +38,17 @@ public class NamingPushRequestHandler implements ServerRequestHandler {
         this.serviceInfoHolder = serviceInfoHolder;
     }
     
+    /**
+     * 接收订阅服务的变动通知
+     * @param request request
+     * @return
+     */
     @Override
     public Response requestReply(Request request) {
         if (request instanceof NotifySubscriberRequest) {
-            NotifySubscriberRequest notifyRequest = (NotifySubscriberRequest) request;
-            serviceInfoHolder.processServiceInfo(notifyRequest.getServiceInfo());
+            LogUtils.NAMING_LOGGER.info("服务订阅通知:{}",request);
+            NotifySubscriberRequest notifyResponse = (NotifySubscriberRequest) request;
+            serviceInfoHolder.processServiceInfo(notifyResponse.getServiceInfo());
             return new NotifySubscriberResponse();
         }
         return null;

@@ -52,8 +52,14 @@ public class SwitchDomain implements Record, Cloneable {
     
     private boolean healthCheckEnabled = true;
     
+    /**
+     * 自动更改运行状况检查
+     */
     private boolean autoChangeHealthCheckEnabled = true;
     
+    /**
+     * Distro协议
+     */
     private boolean distroEnabled = true;
     
     private boolean enableStandalone = true;
@@ -70,20 +76,23 @@ public class SwitchDomain implements Record, Cloneable {
     
     private List<String> incrementalList = new ArrayList<>();
     
+    //用于server 状态调度定时器
     private long serverStatusSynchronizationPeriodMillis = TimeUnit.SECONDS.toMillis(2);
     
+    //用于service状态调度定时器
     private long serviceStatusSynchronizationPeriodMillis = TimeUnit.SECONDS.toMillis(5);
     
     private boolean disableAddIP = false;
     
     private boolean sendBeatOnly = false;
-    
+    //心跳开关？
     private boolean lightBeatEnabled = true;
     
     private Map<String, Integer> limitedUrlMap = new HashMap<>();
     
     /**
      * The server is regarded as expired if its two reporting interval is lagger than this variable.
+     * 如果2次上报间隔大于改值，则说明认为该server是expired
      */
     private long distroServerExpiredMillis = TimeUnit.SECONDS.toMillis(10);
     
@@ -102,8 +111,13 @@ public class SwitchDomain implements Record, Cloneable {
     
     private boolean enableAuthentication = false;
     
+    /**
+     * 是否有人工设置了改值，如果设置了改值，会优先与自动计算出的值
+     * 覆盖的server状态
+     */
     private String overriddenServerStatus = null;
     
+    //默认的service都是临时节点，即根据上报情况动态增删
     private boolean defaultInstanceEphemeral = true;
     
     public boolean isEnableAuthentication() {

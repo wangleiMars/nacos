@@ -28,12 +28,15 @@ import com.alibaba.nacos.api.remote.response.Response;
 import com.alibaba.nacos.api.remote.response.ResponseCode;
 import com.alibaba.nacos.common.remote.client.Connection;
 import com.alibaba.nacos.common.remote.client.RpcClient;
+import com.alibaba.nacos.common.utils.LoggerUtils;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Executor;
@@ -47,7 +50,7 @@ import java.util.concurrent.TimeoutException;
  * @version $Id: GrpcConnection.java, v 0.1 2020年08月09日 1:36 PM liuzunfei Exp $
  */
 public class GrpcConnection extends Connection {
-    
+    static final Logger LOGGER = LoggerFactory.getLogger("com.alibaba.nacos.common.remote.client");
     /**
      * grpc channel.
      */
@@ -70,10 +73,12 @@ public class GrpcConnection extends Connection {
     @Override
     public Response request(Request request, long timeouts) throws NacosException {
         Payload grpcRequest = GrpcUtils.convert(request);
+//        LoggerUtils.printIfInfoEnabled(LOGGER,"发送请求request:{}",grpcRequest);
         ListenableFuture<Payload> requestFuture = grpcFutureServiceStub.request(grpcRequest);
         Payload grpcResponse;
         try {
             grpcResponse = requestFuture.get(timeouts, TimeUnit.MILLISECONDS);
+            LoggerUtils.printIfInfoEnabled(LOGGER,"发送请求request:{},grpcResponse:{}",grpcRequest,grpcResponse);
         } catch (Exception e) {
             throw new NacosException(NacosException.SERVER_ERROR, e);
         }
@@ -84,7 +89,7 @@ public class GrpcConnection extends Connection {
     @Override
     public RequestFuture requestFuture(Request request) throws NacosException {
         Payload grpcRequest = GrpcUtils.convert(request);
-        
+        LoggerUtils.printIfInfoEnabled(LOGGER,"发送请求:{}",grpcRequest);
         final ListenableFuture<Payload> requestFuture = grpcFutureServiceStub.request(grpcRequest);
         return new RequestFuture() {
             
@@ -117,17 +122,20 @@ public class GrpcConnection extends Connection {
     
     public void sendResponse(Response response) {
         Payload convert = GrpcUtils.convert(response);
+        LoggerUtils.printIfInfoEnabled(LOGGER,"双向流返回:{}",response);
         payloadStreamObserver.onNext(convert);
     }
     
     public void sendRequest(Request request) {
         Payload convert = GrpcUtils.convert(request);
+        LoggerUtils.printIfInfoEnabled(LOGGER,"双向流请求:{}",convert);
         payloadStreamObserver.onNext(convert);
     }
     
     @Override
     public void asyncRequest(Request request, final RequestCallBack requestCallBack) throws NacosException {
         Payload grpcRequest = GrpcUtils.convert(request);
+        LoggerUtils.printIfInfoEnabled(LOGGER,"异步发送:{}",grpcRequest);
         ListenableFuture<Payload> requestFuture = grpcFutureServiceStub.request(grpcRequest);
         
         //set callback .

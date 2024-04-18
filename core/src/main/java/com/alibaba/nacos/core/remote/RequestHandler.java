@@ -47,7 +47,7 @@ public abstract class RequestHandler<T extends Request, S extends Response> {
         for (AbstractRequestFilter filter : requestFilters.filters) {
             try {
                 Response filterResult = filter.filter(request, meta, this.getClass());
-                if (filterResult != null && !filterResult.isSuccess()) {
+                if (filterResult != null && !filterResult.isSuccess()) {//过滤器
                     return filterResult;
                 }
             } catch (Throwable throwable) {
